@@ -9,22 +9,22 @@ export const getStaticPaths = async () => {
   try {
     const res = await fetch(`${api}?limit=${maxPokemons}`);
     if (!res.ok) {
-      throw new Error('Failed to fetch Pokemon list');
+      throw new Error("Failed to fetch Pokemon list");
     }
     const data = await res.json();
     const paths = data.results.map((pokemon, index) => ({
-      params: { pokemonId: (index + 1).toString() }, // Corrigido para começar de 1
+      params: { pokemonId: (index + 1).toString() },
     }));
 
     return {
       paths,
-      fallback: 'blocking', // Usar 'blocking' para gerar a página se não estiver pré-renderizada
+      fallback: "blocking",
     };
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching Pokemon data:", error);
     return {
       paths: [],
-      fallback: 'blocking',
+      fallback: "blocking",
     };
   }
 };
@@ -47,7 +47,7 @@ export const getStaticProps = async (context) => {
       props: { pokemon: data },
     };
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching Pokemon data:", error);
     return {
       notFound: true,
     };
