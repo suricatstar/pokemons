@@ -6,39 +6,59 @@ export const getStaticPaths = async () => {
   const maxPokemons = 251;
   const api = `https://pokeapi.co/api/v2/pokemon/`;
 
-  const res = await fetch(`${api}/?limit=${maxPokemons}`);
+  try {
+    const res = await fetch(`${api}?limit=${maxPokemons}`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch Pokemon list');
+    }
+    const data = await res.json();
+    const paths = data.results.map((pokemon, index) => ({
+      params: { pokemonId: (index + 1).toString() }, // Corrigido para começar de 1
+    }));
 
-  const data = await res.json();
-
-  const paths = data.results.map((pokemon, index) => {
     return {
-      params: { pokemonId: index.toString() },
+      paths,
+      fallback: 'blocking', // Usar 'blocking' para gerar a página se não estiver pré-renderizada
     };
-  });
-
-  return {
-    paths,
-    fallback: false,
-  };
+  } catch (error) {
+    console.error(error);
+    return {
+      paths: [],
+      fallback: 'blocking',
+    };
+  }
 };
 
 export const getStaticProps = async (context) => {
-  let id = context.params.pokemonId;
+  const id = context.params.pokemonId;
 
-  if (id == 0 ) {
-    id = 1
+  try {
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+
+    if (!res.ok) {
+      return {
+        notFound: true,
+      };
+    }
+
+    const data = await res.json();
+
+    return {
+      props: { pokemon: data },
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      notFound: true,
+    };
   }
-
-  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-
-  const data = await res.json();
-
-  return {
-    props: { pokemon: data },
-  };
 };
 
 export default function Pokemon({ pokemon }) {
+  if (!pokemon) {
+    return <div>Pokémon não encontrado.</div>;
+  }
+
   return (
     <div className={styles.pokemon_container}>
       <h1 className={styles.title}>{pokemon.name}</h1>
